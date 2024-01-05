@@ -17,7 +17,7 @@ message("Build number: ${INCREMENTED_VALUE}")
 
 # Variables.
 set(PATCH_VERSION ${INCREMENTED_VALUE} CACHE INTERNAL "Patch version")
-set(PROJECT_VERSION 1.2.${PATCH_VERSION})
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(helloworld VERSION ${PROJECT_VERSION})
 
