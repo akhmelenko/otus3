@@ -1,14 +1,40 @@
-#define BOOST_TEST_MODULE test_version
+// #define BOOST_TEST_MODULE test_version
 
-#include "lib.h"
+// #include "helloworld/lib.h"
 
-#include <boost/test/unit_test.hpp>
+// #include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
+// #include <gmock/gmock.h>
 
-BOOST_AUTO_TEST_SUITE(test_version)
+// #include <iostream>
 
-BOOST_AUTO_TEST_CASE(test_valid_version)
-{
-    BOOST_CHECK(version() != 100);
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wc99-extensions"
+
+// BOOST_AUTO_TEST_SUITE(test_version)
+
+// BOOST_AUTO_TEST_CASE(test_valid_version)
+// #pragma GCC diagnostic pop 
+// {
+//     std::cout << "version=" << version() << std::endl;
+//     BOOST_CHECK(version() < 100);
+// }
+
+// BOOST_AUTO_TEST_SUITE_END()
+
+TEST(TestGroupName, Subtest_1) {
+  ASSERT_TRUE(1 == 1);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+TEST(TestGroupName, Subtest_2) {
+  ASSERT_FALSE('b' == 'b');
+  std::cout << "continue test after failure" << std::endl;
+}
+
+int main(int argc, char **argv)
+{
+  ::testing::InitGoogleTest(&argc, argv);
+//   ::testing::InitGoogleMock(&argc, argv);
+  
+  return RUN_ALL_TESTS();
+}

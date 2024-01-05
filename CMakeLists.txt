@@ -1,25 +1,81 @@
+# Cmake minimal version.
 cmake_minimum_required(VERSION 3.10)
 
-set(PATCH_VERSION "2" CACHE INTERNAL "Patch version")
-set(PROJECT_VESRION 0.0.${PATCH_VERSION})
+include(GoogleTest)
 
-project(helloworld VERSION ${PROJECT_VESRION})
+# INCREMENT IN MAIN CMakeLists.txt.
+# Basic definitions.
+set(CACHE_FILE ${CMAKE_SOURCE_DIR}/build_number_cache.txt)
+# Read number from file and increment.
+if(EXISTS ${CACHE_FILE})
+    file(READ ${CACHE_FILE} INCREMENTED_VALUE)
+    math(EXPR INCREMENTED_VALUE "${INCREMENTED_VALUE}+1")
+else()
+    set(INCREMENTED_VALUE "1")
+endif()
+# Update cache file.
+file(WRITE ${CACHE_FILE} ${INCREMENTED_VALUE})
+message("Build number: ${INCREMENTED_VALUE}")
+
+# Variables.
+set(PATCH_VERSION ${INCREMENTED_VALUE} CACHE INTERNAL "Patch version")
+set(PROJECT_VERSION 1.2.${PATCH_VERSION})
+
+project(helloworld VERSION ${PROJECT_VERSION})
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+# find_package(GTest REQUIRED)
+find_package(GTest)
+include(GoogleTest)
 
 configure_file(version.h.in version.h)
 
+include_directories(helloworld)
+
 add_executable(helloworld_cli main.cpp)
-add_library(helloworld lib.cpp)
+
+# Detatched script file.
+add_custom_command(
+    TARGET helloworld_cli
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND}
+        -D TEST_VARIABLE=55
+        -P ${CMAKE_SOURCE_DIR}/"detached.cmake"
+)
+
+add_subdirectory(helloworld)
+
+# add_library(helloworld lib.cpp)
+
 add_executable(test_version test_version.cpp)
 
+gtest_add_tests(TARGET test_version
+                TEST_SUFFIX .noArgs
+                TEST_LIST myGoogleTests
+)
+set_tests_properties(${myGoogleTests}   PROPERTIES TIMEOUT 10)
+
+message("TEST_VARIABLE after script=${TEST_VARIABLE}")
+
 set_target_properties(helloworld_cli helloworld test_version PROPERTIES
+# set_target_properties(helloworld_cli helloworld PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
+
+# Inclule Cmake binary directory to make code to see generated header files (version.h)
+# CMAKE_BINARY_DIR - automaticaly substitute cmake build files directory.
 target_include_directories(helloworld
     PRIVATE "${CMAKE_BINARY_DIR}"
 )
+
+message("CMAKE_BINARY_DIR=" "${CMAKE_BINARY_DIR}")
+# Automaticaly generated version variables:
+message("PROJECT_VERSION_MAJOR=" "${PROJECT_VERSION_MAJOR}")
+message("PROJECT_VERSION_MINOR=" "${PROJECT_VERSION_MINOR}")
+message("PROJECT_VERSION_PATCH=" "${PROJECT_VERSION_PATCH}")
+message("PROJECT_VERSION_TWEAK=" "${PROJECT_VERSION_TWEAK}")
+
 set_target_properties(test_version PROPERTIES
     COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
     INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
@@ -28,10 +84,15 @@ set_target_properties(test_version PROPERTIES
 target_link_libraries(helloworld_cli PRIVATE
     helloworld
 )
-target_link_libraries(test_version
-    ${Boost_LIBRARIES}
-    helloworld
-)
+
+# target_link_libraries(helloworld_cli PRIVATE
+#     lib
+# )
+
+# target_link_libraries(test_version
+#     ${Boost_LIBRARIES}
+#     helloworld
+# )
 
 if (MSVC)
     target_compile_options(helloworld_cli PRIVATE
@@ -72,3 +133,16 @@ include(CPack)
 enable_testing()
 
 add_test(test_version test_version)
+
+include_directories(/usr/local/include)
+include_directories(/usr/local/lib)
+
+
+# target_include_directories(test_version 
+#     PRIVATE
+#     "/usr/local/include",
+#     "/usr/local/lib",
+# )
+target_include_directories(test_version PRIVATE ${GTEST_INCLUDE_DIRS})
+# target_link_libraries(test_version gtest gtest_main gmock pthread)
+target_link_libraries(test_version PRIVATE ${GTEST_BOTH_LIBRARIES})
