@@ -19,14 +19,12 @@ message("Build number: ${INCREMENTED_VALUE}")
 
 # Variables.
 set(PATCH_VERSION ${INCREMENTED_VALUE} CACHE INTERNAL "Patch version")
-set(PROJECT_VERSION 1.2.${PATCH_VERSION})
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(helloworld VERSION ${PROJECT_VERSION})
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-# find_package(GTest REQUIRED)
-find_package(GTest)
-include(GoogleTest)
+find_package(GTest REQUIRED)
+# include(GoogleTest)
 
 configure_file(version.h.in version.h)
 
@@ -44,8 +42,6 @@ add_custom_command(
 )
 
 add_subdirectory(helloworld)
-
-# add_library(helloworld lib.cpp)
 
 add_executable(test_version test_version.cpp)
 
@@ -76,10 +72,6 @@ message("PROJECT_VERSION_MINOR=" "${PROJECT_VERSION_MINOR}")
 message("PROJECT_VERSION_PATCH=" "${PROJECT_VERSION_PATCH}")
 message("PROJECT_VERSION_TWEAK=" "${PROJECT_VERSION_TWEAK}")
 
-set_target_properties(test_version PROPERTIES
-    COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-    INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-)
 
 target_link_libraries(helloworld_cli PRIVATE
     helloworld
@@ -87,11 +79,6 @@ target_link_libraries(helloworld_cli PRIVATE
 
 # target_link_libraries(helloworld_cli PRIVATE
 #     lib
-# )
-
-# target_link_libraries(test_version
-#     ${Boost_LIBRARIES}
-#     helloworld
 # )
 
 if (MSVC)
@@ -134,15 +121,6 @@ enable_testing()
 
 add_test(test_version test_version)
 
-include_directories(/usr/local/include)
-include_directories(/usr/local/lib)
 
-
-# target_include_directories(test_version 
-#     PRIVATE
-#     "/usr/local/include",
-#     "/usr/local/lib",
-# )
 target_include_directories(test_version PRIVATE ${GTEST_INCLUDE_DIRS})
-# target_link_libraries(test_version gtest gtest_main gmock pthread)
-target_link_libraries(test_version PRIVATE ${GTEST_BOTH_LIBRARIES})
+target_link_libraries(test_version PRIVATE ${GTEST_BOTH_LIBRARIES} helloworld)
