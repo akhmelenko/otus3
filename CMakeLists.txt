@@ -21,14 +21,15 @@ message("Build number: ${INCREMENTED_VALUE}")
 set(PATCH_VERSION ${INCREMENTED_VALUE} CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VERSION})
+project(version VERSION ${PROJECT_VERSION})
 
 find_package(GTest REQUIRED)
 # include(GoogleTest)
 
-configure_file(version.h.in version.h)
+configure_file(version_arg.h.in version_arg.h)
 
-include_directories(helloworld)
+include_directories(version)
+include_directories(db)
 
 add_executable(helloworld_cli main.cpp)
 
@@ -41,7 +42,8 @@ add_custom_command(
         -P ${CMAKE_SOURCE_DIR}/"detached.cmake"
 )
 
-add_subdirectory(helloworld)
+add_subdirectory(version)
+add_subdirectory(db)
 
 add_executable(test_version test_version.cpp)
 
@@ -49,19 +51,18 @@ gtest_add_tests(TARGET test_version
                 TEST_SUFFIX .noArgs
                 TEST_LIST myGoogleTests
 )
-set_tests_properties(${myGoogleTests}   PROPERTIES TIMEOUT 10)
+set_tests_properties(${myGoogleTests} PROPERTIES TIMEOUT 10)
 
 message("TEST_VARIABLE after script=${TEST_VARIABLE}")
 
-set_target_properties(helloworld_cli helloworld test_version PROPERTIES
-# set_target_properties(helloworld_cli helloworld PROPERTIES
+set_target_properties(helloworld_cli version db test_version PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
 
 # Inclule Cmake binary directory to make code to see generated header files (version.h)
 # CMAKE_BINARY_DIR - automaticaly substitute cmake build files directory.
-target_include_directories(helloworld
+target_include_directories(version
     PRIVATE "${CMAKE_BINARY_DIR}"
 )
 
@@ -74,18 +75,18 @@ message("PROJECT_VERSION_TWEAK=" "${PROJECT_VERSION_TWEAK}")
 
 
 target_link_libraries(helloworld_cli PRIVATE
-    helloworld
+    version
+    db
 )
-
-# target_link_libraries(helloworld_cli PRIVATE
-#     lib
-# )
 
 if (MSVC)
     target_compile_options(helloworld_cli PRIVATE
         /W4
     )
-    target_compile_options(helloworld PRIVATE
+    target_compile_options(version PRIVATE
+        /W4
+    )
+    target_compile_options(db PRIVATE
         /W4
     )
     target_compile_options(test_version PRIVATE
@@ -95,7 +96,10 @@ else ()
     target_compile_options(helloworld_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    target_compile_options(helloworld PRIVATE
+    target_compile_options(version PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
+    target_compile_options(db PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     target_compile_options(test_version PRIVATE
@@ -121,6 +125,10 @@ enable_testing()
 
 add_test(test_version test_version)
 
-
-target_include_directories(test_version PRIVATE ${GTEST_INCLUDE_DIRS})
-target_link_libraries(test_version PRIVATE ${GTEST_BOTH_LIBRARIES} helloworld)
+target_include_directories(test_version PRIVATE ${GTEST_INCLUDE_DIRS} ${GMock_INCLUDE_DIR})
+target_link_libraries(test_version PRIVATE 
+    GTest::gtest 
+    # GTest::gmock 
+    version 
+    db
+)
