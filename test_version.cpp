@@ -1,34 +1,19 @@
-// #define BOOST_TEST_MODULE test_version
 
-// #include "helloworld/lib.h"
+#include "helloworld/lib.h"
 
-// #include <boost/test/unit_test.hpp>
 #include <gtest/gtest.h>
 // #include <gmock/gmock.h>
 
-// #include <iostream>
-
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wc99-extensions"
-
-// BOOST_AUTO_TEST_SUITE(test_version)
-
-// BOOST_AUTO_TEST_CASE(test_valid_version)
-// #pragma GCC diagnostic pop 
-// {
-//     std::cout << "version=" << version() << std::endl;
-//     BOOST_CHECK(version() < 100);
-// }
-
-// BOOST_AUTO_TEST_SUITE_END()
-
-TEST(TestGroupName, Subtest_1) {
+TEST(TestGroupVersion, Subtest_1) {
   ASSERT_TRUE(1 == 1);
 }
 
-TEST(TestGroupName, Subtest_2) {
-  ASSERT_FALSE('b' == 'b');
-  std::cout << "continue test after failure" << std::endl;
+TEST(TestGroupVersion, Subtest_2) {
+  ASSERT_FALSE('a' == 'b');
+}
+
+TEST(TestGroupVersion, TestBuildVersion) {
+  ASSERT_TRUE(version() < 100);
 }
 
 int main(int argc, char **argv)
