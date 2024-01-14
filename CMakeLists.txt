@@ -128,7 +128,7 @@ add_test(test_version test_version)
 target_include_directories(test_version PRIVATE ${GTEST_INCLUDE_DIRS} ${GMock_INCLUDE_DIR})
 target_link_libraries(test_version PRIVATE 
     GTest::gtest 
-    # GTest::gmock 
+    #GTest::gmock 
     version 
     db
 )
