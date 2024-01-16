@@ -1,5 +1,4 @@
 
-#include "db/db.h"
 #include "version/version.h"
 
 // #include <gmock/gmock.h>
