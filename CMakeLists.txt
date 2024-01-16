@@ -3,22 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 
 include(GoogleTest)
 
-# INCREMENT IN MAIN CMakeLists.txt.
-# Basic definitions.
-set(CACHE_FILE ${CMAKE_SOURCE_DIR}/build_number_cache.txt)
-# Read number from file and increment.
-if(EXISTS ${CACHE_FILE})
-    file(READ ${CACHE_FILE} INCREMENTED_VALUE)
-    math(EXPR INCREMENTED_VALUE "${INCREMENTED_VALUE}+1")
-else()
-    set(INCREMENTED_VALUE "1")
-endif()
-# Update cache file.
-file(WRITE ${CACHE_FILE} ${INCREMENTED_VALUE})
-message("Build number: ${INCREMENTED_VALUE}")
-
 # Variables.
-set(PATCH_VERSION ${INCREMENTED_VALUE} CACHE INTERNAL "Patch version")
+set(PATCH_VERSION 2 CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
 project(version VERSION ${PROJECT_VERSION})
@@ -29,21 +15,10 @@ find_package(GTest REQUIRED)
 configure_file(version_arg.h.in version_arg.h)
 
 include_directories(version)
-include_directories(db)
 
-add_executable(helloworld_cli main.cpp)
-
-# Detatched script file.
-add_custom_command(
-    TARGET helloworld_cli
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND}
-        -D TEST_VARIABLE=55
-        -P ${CMAKE_SOURCE_DIR}/"detached.cmake"
-)
+add_executable(ip_filter main.cpp)
 
 add_subdirectory(version)
-add_subdirectory(db)
 
 add_executable(test_version test_version.cpp)
 
@@ -53,9 +28,7 @@ gtest_add_tests(TARGET test_version
 )
 set_tests_properties(${myGoogleTests} PROPERTIES TIMEOUT 10)
 
-message("TEST_VARIABLE after script=${TEST_VARIABLE}")
-
-set_target_properties(helloworld_cli version db test_version PROPERTIES
+set_target_properties(ip_filter version test_version PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
@@ -66,40 +39,25 @@ target_include_directories(version
     PRIVATE "${CMAKE_BINARY_DIR}"
 )
 
-message("CMAKE_BINARY_DIR=" "${CMAKE_BINARY_DIR}")
-# Automaticaly generated version variables:
-message("PROJECT_VERSION_MAJOR=" "${PROJECT_VERSION_MAJOR}")
-message("PROJECT_VERSION_MINOR=" "${PROJECT_VERSION_MINOR}")
-message("PROJECT_VERSION_PATCH=" "${PROJECT_VERSION_PATCH}")
-message("PROJECT_VERSION_TWEAK=" "${PROJECT_VERSION_TWEAK}")
-
-
-target_link_libraries(helloworld_cli PRIVATE
+target_link_libraries(ip_filter PRIVATE
     version
-    db
 )
 
 if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ip_filter PRIVATE
         /W4
     )
     target_compile_options(version PRIVATE
-        /W4
-    )
-    target_compile_options(db PRIVATE
         /W4
     )
     target_compile_options(test_version PRIVATE
         /W4
     )
 else ()
-    target_compile_options(helloworld_cli PRIVATE
+    target_compile_options(ip_filter PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     target_compile_options(version PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(db PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     target_compile_options(test_version PRIVATE
@@ -109,7 +67,7 @@ endif()
 
 
 
-install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS ip_filter RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 
@@ -130,5 +88,4 @@ target_link_libraries(test_version PRIVATE
     GTest::gtest 
     #GTest::gmock 
     version 
-    db
 )
