@@ -42,6 +42,14 @@ void PutZeros(std::vector<std::vector<std::string>>& pool) {
     }
 }
 
+void PutZerosToIp(std::vector<std::string>& ip) {
+    for (auto& octet: ip) {
+        while (octet.size() < 3) {
+            octet.insert(0, "0");
+        }
+    }
+}
+
 void RemoveZeros(std::vector<std::vector<std::string>>& pool) {
     for (auto& ip: pool) {
         for (auto& octet: ip) {
@@ -52,7 +60,17 @@ void RemoveZeros(std::vector<std::vector<std::string>>& pool) {
     }
 }
 
-void Sort(std::vector<std::vector<std::string>>& pool) {
+auto IpStrsToDigit(std::vector<std::string>& ip_strs) {
+    PutZerosToIp(ip_strs);
+    // Concat
+    std::string str_ip_with_zeros;
+    for (auto& str_octet: ip_strs) {
+        str_ip_with_zeros.append(str_octet);
+    }
+    return atol(str_ip_with_zeros.data());
+}
+
+void SortStr(std::vector<std::vector<std::string>>& pool) {
     PutZeros(pool);
     // Concat and sort.
     std::vector<std::string> concat_ips;
@@ -87,7 +105,7 @@ auto Filter(std::vector<std::vector<std::string>>& pool, int first_octet){
     return filtered;
 }
 
-auto Filter(std::vector<std::vector<std::string>>& pool, int first_octet, int second_octet){
+auto FilterStr(std::vector<std::vector<std::string>>& pool, int first_octet, int second_octet){
     std::vector<std::vector<std::string>> filtered;
     for (auto& ip: pool) {
         if (atoi(ip[0].data()) == first_octet && atoi(ip[1].data()) == second_octet) {
@@ -109,7 +127,7 @@ auto FilterAny(std::vector<std::vector<std::string>>& pool, int any_octet){
     return filtered;
 }
 
-void PrintPool(std::vector<std::vector<std::string>>& ip_pool) {
+void PrintPoolFromStr(std::vector<std::vector<std::string>>& ip_pool) {
     for(auto ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
         {
             for(auto ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
@@ -117,12 +135,70 @@ void PrintPool(std::vector<std::vector<std::string>>& ip_pool) {
                 if (ip_part != ip->cbegin())
                 {
                     std::cout << ".";
-
                 }
                 std::cout << *ip_part;
             }
             std::cout << std::endl;
         }
+}
+
+auto GetOctetsFromIpDigit(const uint64_t ip_digit) {
+    std::vector<uint16_t> octets(4);
+    auto ip = ip_digit;
+    for (int i = 3; i >= 0; i--) {
+        octets[i] = ip % 1000;
+        ip /= 1000;
+    }
+    return octets;
+}
+
+auto FilterU64(std::vector<uint64_t>& pool, int first_octet){
+    std::vector<uint64_t> filtered;    
+    for (auto& ip: pool) {
+        auto octets = GetOctetsFromIpDigit(ip);
+        if (octets[0] == first_octet) {
+            filtered.push_back(ip);
+        }
+    }
+    return filtered;
+}
+
+auto FilterU64(std::vector<uint64_t>& pool, int first_octet, int second_octet){
+    std::vector<uint64_t> filtered;    
+    for (auto& ip: pool) {
+        auto octets = GetOctetsFromIpDigit(ip);
+        if (octets[0] == first_octet && octets[1] == second_octet) {
+            filtered.push_back(ip);
+        }
+    }
+    return filtered;
+}
+
+auto FilterAny64(std::vector<uint64_t>& pool, int any_octet){
+    std::vector<uint64_t> filtered;
+    for (auto& ip: pool) {
+        auto octets = GetOctetsFromIpDigit(ip);
+        for (auto& octet: octets) {            
+            if (octet == any_octet) {
+                filtered.push_back(ip);
+            }
+        }
+    }
+    return filtered;
+}
+
+void PrintPoolU64(std::vector<uint64_t>& ip_pool) {
+    for (const auto& digit_ip: ip_pool) {       
+        auto octets = GetOctetsFromIpDigit(digit_ip);
+        // Print octets.
+        for (auto it = octets.cbegin(); it != octets.cend(); ++it) {
+            if (it != octets.cbegin()) {
+                std::cout << ".";
+            }
+            std::cout << *it;
+        }
+        std::cout << std::endl;
+    }
 }
 
 int main()
@@ -131,26 +207,28 @@ int main()
     {
         std::ifstream f;
         f.open("ip_filter.tsv");
-        std::vector<std::vector<std::string>> ip_pool;
+        // std::vector<std::vector<std::string>> ip_pool;
+        std::vector<uint64_t> ip_pool{};
 
         if (f.is_open() ) {
             std::string line;
             while(std::getline(f, line))
             {
                 std::vector<std::string> v = split(line, '\t');
-                ip_pool.push_back(split(v.at(0), '.'));
+                v = split(v.at(0), '.');
+                auto ip_digit = IpStrsToDigit(v);
+                ip_pool.push_back(ip_digit);
             }
         }
 
-        // TODO reverse lexicographically sort
-        Sort(ip_pool);
-        PrintPool(ip_pool);
-        auto filtered = Filter(ip_pool, 1);
-        PrintPool(filtered);
-        filtered = Filter(ip_pool, 46, 70);
-        PrintPool(filtered);
-        filtered = FilterAny(ip_pool, 46);
-        PrintPool(filtered);
+        std::sort(ip_pool.begin(), ip_pool.end(), std::greater<uint64_t>());
+        PrintPoolU64(ip_pool);
+        auto filtered = FilterU64(ip_pool, 1);
+        PrintPoolU64(filtered);
+        filtered = FilterU64(ip_pool, 46, 70);
+        PrintPoolU64(filtered);
+        filtered = FilterAny64(ip_pool, 46);
+        PrintPoolU64(filtered);
 
         // 222.173.235.246
         // 222.130.177.64
