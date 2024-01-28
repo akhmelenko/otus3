@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
@@ -13,6 +14,9 @@
 // ("11.", '.') -> ["11", ""]
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
+
+using IpType = std::array<uint8_t, 4>;
+
 std::vector<std::string> split(const std::string &str, char d)
 {
     std::vector<std::string> r;
@@ -143,10 +147,10 @@ void PrintPoolFromStr(std::vector<std::vector<std::string>>& ip_pool) {
 }
 
 auto GetOctetsFromIpDigit(const uint64_t ip_digit) {
-    std::vector<uint16_t> octets(4);
+    IpType octets;
     auto ip = ip_digit;
     for (int i = 3; i >= 0; i--) {
-        octets[i] = ip % 1000;
+        octets[i] = static_cast<uint8_t>(ip % 1000);
         ip /= 1000;
     }
     return octets;
@@ -158,6 +162,39 @@ auto FilterU64(std::vector<uint64_t>& pool, int first_octet){
         auto octets = GetOctetsFromIpDigit(ip);
         if (octets[0] == first_octet) {
             filtered.push_back(ip);
+        }
+    }
+    return filtered;
+}
+
+auto FilterArrayOctets(std::vector<IpType>& pool, int first_octet){
+    std::vector<IpType> filtered;    
+    for (auto& ip: pool) {
+        if (ip[0] == first_octet) {
+            filtered.push_back(ip);
+        }
+    }
+    return filtered;
+}
+
+auto FilterArrayOctets(std::vector<IpType>& pool, int first_octet, int second_octet){
+    std::vector<IpType> filtered;    
+    for (auto& ip: pool) {
+        if (ip[0] == first_octet && ip[1] == second_octet) {
+            filtered.push_back(ip);
+        }
+    }
+    return filtered;
+}
+
+auto FilterArrayOctetsAny(std::vector<IpType>& pool, int any_octet){
+    std::vector<IpType> filtered;    
+    for (auto& ip: pool) {
+        for (auto& octet: ip) {            
+            if (octet == any_octet) {
+                filtered.push_back(ip);
+                break;
+            }
         }
     }
     return filtered;
@@ -195,10 +232,27 @@ void PrintPoolU64(std::vector<uint64_t>& ip_pool) {
             if (it != octets.cbegin()) {
                 std::cout << ".";
             }
-            std::cout << *it;
+            std::cout << +*it;
         }
         std::cout << std::endl;
     }
+}
+
+void PrintPoolArrayOctets(std::vector<IpType>& ip_pool) {     
+    for (const auto& octets: ip_pool) {       
+        // Print octets.
+        for (auto it = octets.cbegin(); it != octets.cend(); ++it) {
+            if (it != octets.cbegin()) {
+                std::cout << ".";
+            }
+            std::cout << +*it;
+        }
+        std::cout << std::endl;
+    }
+}
+
+void SortArrayOctets(std::vector<IpType>& ip_pool) {     
+    std::sort(ip_pool.begin(), ip_pool.end(), std::greater<>{});        
 }
 
 int main()
@@ -207,8 +261,7 @@ int main()
     {
         std::ifstream f;
         f.open("ip_filter.tsv");
-        // std::vector<std::vector<std::string>> ip_pool;
-        std::vector<uint64_t> ip_pool{};
+        std::vector<IpType> ip_pool{};
 
         if (f.is_open() ) {
             std::string line;
@@ -217,18 +270,18 @@ int main()
                 std::vector<std::string> v = split(line, '\t');
                 v = split(v.at(0), '.');
                 auto ip_digit = IpStrsToDigit(v);
-                ip_pool.push_back(ip_digit);
+                ip_pool.push_back(GetOctetsFromIpDigit(ip_digit));
             }
         }
 
-        std::sort(ip_pool.begin(), ip_pool.end(), std::greater<uint64_t>());
-        PrintPoolU64(ip_pool);
-        auto filtered = FilterU64(ip_pool, 1);
-        PrintPoolU64(filtered);
-        filtered = FilterU64(ip_pool, 46, 70);
-        PrintPoolU64(filtered);
-        filtered = FilterAny64(ip_pool, 46);
-        PrintPoolU64(filtered);
+        SortArrayOctets(ip_pool);
+        PrintPoolArrayOctets(ip_pool);
+        auto filtered = FilterArrayOctets(ip_pool, 1);
+        PrintPoolArrayOctets(filtered);
+        filtered = FilterArrayOctets(ip_pool, 46, 70);
+        PrintPoolArrayOctets(filtered);
+        filtered = FilterArrayOctetsAny(ip_pool, 46);
+        PrintPoolArrayOctets(filtered);
 
         // 222.173.235.246
         // 222.130.177.64
