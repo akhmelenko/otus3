@@ -60,6 +60,9 @@
         "set": "cpp",
         "span": "cpp",
         "fstream": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "list": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp"
     }
 }

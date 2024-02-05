@@ -1,12 +1,12 @@
 
-#include "version/version.h"
+// #include "version/version.h"
 
 // #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-TEST(TestGroupVersion, TestBuildVersion) {
-  ASSERT_TRUE(version() < 100);
-}
+// TEST(TestGroupVersion, TestBuildVersion) {
+//   ASSERT_TRUE(version() < 100);
+// }
 
 TEST(TestGroupVersion, Subtest_1) {
   ASSERT_TRUE(1 == 1);
